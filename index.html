@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-wallet"></i> Budget Tracker</h1>
+            <div class="balance">
+                <h2>Balance: $<span id="balance">0.00</span></h2>
+            </div>
+        </header>
+
+        <main>
+            <div class="form-section">
+                <h3>Add Transaction</h3>
+                <form id="transaction-form">
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" required placeholder="e.g., Grocery shopping">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" required>
+                            <option value="food">Food & Dining</option>
+                            <option value="transport">Transportation</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="bills">Bills & Utilities</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
+                </form>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-cards">
+                    <div class="card income">
+                        <i class="fas fa-arrow-up"></i>
+                        <h4>Income</h4>
+                        <p>$<span id="total-income">0.00</span></p>
+                    </div>
+                    <div class="card expense">
+                        <i class="fas fa-arrow-down"></i>
+                        <h4>Expenses</h4>
+                        <p>$<span id="total-expense">0.00</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transactions-section">
+                <h3>Recent Transactions</h3>
+                <div class="filter-section">
+                    <select id="filter-type">
+                        <option value="all">All Transactions</option>
+                        <option value="income">Income Only</option>
+                        <option value="expense">Expenses Only</option>
+                    </select>
+                    <select id="filter-category">
+                        <option value="all">All Categories</option>
+                        <option value="food">Food & Dining</option>
+                        <option value="transport">Transportation</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="bills">Bills & Utilities</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div id="transactions-list" class="transactions-list">
+                    <p class="no-transactions">No transactions yet. Add your first transaction above!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="loading" class="loading hidden">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Syncing with cloud...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
