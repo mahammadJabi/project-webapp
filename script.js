@@ -2,8 +2,8 @@ class BudgetTracker {
     constructor() {
         this.transactions = [];
         this.jsonBinId = null;
-        this.apiKey = 'YOUR_JSONBIN_API_KEY'; // Replace with your JSONBin.io API key
-        this.init();
+        this.apiKey = '$2a$10$Kt6x/YxTouo13nyZzfobMuMXAxNs1IonhmWaBPGyqWFFvceNMsw26'; 
+        this.charts = {};
     }
 
     async init() {
@@ -16,10 +16,16 @@ class BudgetTracker {
         const form = document.getElementById('transaction-form');
         const filterType = document.getElementById('filter-type');
         const filterCategory = document.getElementById('filter-category');
+        const navButtons = document.querySelectorAll('.nav-btn');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
         filterType.addEventListener('change', () => this.render());
         filterCategory.addEventListener('change', () => this.render());
+        
+        // Navigation event listeners
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
+        });
     }
 
     async handleSubmit(e) {
@@ -58,6 +64,8 @@ class BudgetTracker {
         this.renderBalance();
         this.renderSummary();
         this.renderTransactions();
+        this.renderDashboard();
+        this.renderAnalytics();
     }
 
     renderBalance() {
@@ -263,6 +271,377 @@ class BudgetTracker {
             }
         };
         reader.readAsText(file);
+    }
+
+    // Navigation methods
+    switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+        
+        // Add active class to clicked button
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        
+        // Render charts if switching to dashboard or analytics
+        if (tabName === 'dashboard' || tabName === 'analytics') {
+            setTimeout(() => {
+                this.renderDashboard();
+                this.renderAnalytics();
+            }, 100);
+        }
+    }
+
+    // Dashboard rendering methods
+    renderDashboard() {
+        this.renderExpenseChart();
+        this.renderMonthlyChart();
+        this.renderBalanceChart();
+        this.renderQuickStats();
+    }
+
+    renderExpenseChart() {
+        const ctx = document.getElementById('expenseChart');
+        if (!ctx) return;
+
+        if (this.charts.expenseChart) {
+            this.charts.expenseChart.destroy();
+        }
+
+        const expenseData = this.getExpenseByCategory();
+        const labels = Object.keys(expenseData);
+        const data = Object.values(expenseData);
+
+        this.charts.expenseChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    renderMonthlyChart() {
+        const ctx = document.getElementById('monthlyChart');
+        if (!ctx) return;
+
+        if (this.charts.monthlyChart) {
+            this.charts.monthlyChart.destroy();
+        }
+
+        const monthlyData = this.getMonthlyData();
+        const labels = monthlyData.labels;
+        const incomeData = monthlyData.income;
+        const expenseData = monthlyData.expenses;
+
+        this.charts.monthlyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Income',
+                    data: incomeData,
+                    backgroundColor: '#4CAF50'
+                }, {
+                    label: 'Expenses',
+                    data: expenseData,
+                    backgroundColor: '#f44336'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    renderBalanceChart() {
+        const ctx = document.getElementById('balanceChart');
+        if (!ctx) return;
+
+        if (this.charts.balanceChart) {
+            this.charts.balanceChart.destroy();
+        }
+
+        const balanceData = this.getBalanceTrend();
+        const labels = balanceData.labels;
+        const data = balanceData.balances;
+
+        this.charts.balanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Balance',
+                    data: data,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    renderQuickStats() {
+        const today = new Date().toDateString();
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        const todaySpending = this.transactions
+            .filter(t => t.type === 'expense' && new Date(t.date).toDateString() === today)
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const weekSpending = this.transactions
+            .filter(t => t.type === 'expense' && new Date(t.date) >= weekAgo)
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const monthSpending = this.transactions
+            .filter(t => t.type === 'expense' && new Date(t.date) >= monthAgo)
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const biggestExpense = this.transactions
+            .filter(t => t.type === 'expense')
+            .reduce((max, t) => Math.abs(t.amount) > Math.abs(max.amount) ? t : max, {amount: 0});
+
+        document.getElementById('today-spending').textContent = todaySpending.toFixed(2);
+        document.getElementById('week-spending').textContent = weekSpending.toFixed(2);
+        document.getElementById('month-spending').textContent = monthSpending.toFixed(2);
+        document.getElementById('biggest-expense').textContent = Math.abs(biggestExpense.amount).toFixed(2);
+    }
+
+    // Analytics rendering methods
+    renderAnalytics() {
+        this.renderIncomeExpenseChart();
+        this.renderWeeklyChart();
+        this.renderCategoryBreakdown();
+    }
+
+    renderIncomeExpenseChart() {
+        const ctx = document.getElementById('incomeExpenseChart');
+        if (!ctx) return;
+
+        if (this.charts.incomeExpenseChart) {
+            this.charts.incomeExpenseChart.destroy();
+        }
+
+        const data = this.getWeeklyIncomeExpense();
+        const labels = data.labels;
+        const incomeData = data.income;
+        const expenseData = data.expenses;
+
+        this.charts.incomeExpenseChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Income',
+                    data: incomeData,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    fill: true
+                }, {
+                    label: 'Expenses',
+                    data: expenseData,
+                    borderColor: '#f44336',
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    renderWeeklyChart() {
+        const ctx = document.getElementById('weeklyChart');
+        if (!ctx) return;
+
+        if (this.charts.weeklyChart) {
+            this.charts.weeklyChart.destroy();
+        }
+
+        const data = this.getWeeklySpending();
+        const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const spendingData = data;
+
+        this.charts.weeklyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Spending',
+                    data: spendingData,
+                    backgroundColor: '#667eea',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    renderCategoryBreakdown() {
+        const container = document.getElementById('category-breakdown');
+        if (!container) return;
+
+        const expenseData = this.getExpenseByCategory();
+        const totalExpenses = Object.values(expenseData).reduce((sum, val) => sum + val, 0);
+
+        container.innerHTML = Object.entries(expenseData)
+            .map(([category, amount]) => {
+                const percentage = totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(1) : 0;
+                return `
+                    <div class="category-item">
+                        <span class="category-name">${category}</span>
+                        <span class="category-amount">$${amount.toFixed(2)} (${percentage}%)</span>
+                    </div>
+                `;
+            })
+            .join('');
+    }
+
+    // Data processing methods
+    getExpenseByCategory() {
+        const expenses = this.transactions.filter(t => t.type === 'expense');
+        const categories = {};
+        
+        expenses.forEach(expense => {
+            const category = expense.category;
+            categories[category] = (categories[category] || 0) + Math.abs(expense.amount);
+        });
+        
+        return categories;
+    }
+
+    getMonthlyData() {
+        const monthlyData = {};
+        
+        this.transactions.forEach(transaction => {
+            const month = new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            if (!monthlyData[month]) {
+                monthlyData[month] = { income: 0, expenses: 0 };
+            }
+            
+            if (transaction.type === 'income') {
+                monthlyData[month].income += transaction.amount;
+            } else {
+                monthlyData[month].expenses += Math.abs(transaction.amount);
+            }
+        });
+        
+        const labels = Object.keys(monthlyData).slice(-6); // Last 6 months
+        const income = labels.map(label => monthlyData[label]?.income || 0);
+        const expenses = labels.map(label => monthlyData[label]?.expenses || 0);
+        
+        return { labels, income, expenses };
+    }
+
+    getBalanceTrend() {
+        const sortedTransactions = [...this.transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let runningBalance = 0;
+        const balances = [];
+        const labels = [];
+        
+        sortedTransactions.forEach(transaction => {
+            runningBalance += transaction.amount;
+            balances.push(runningBalance);
+            labels.push(new Date(transaction.date).toLocaleDateString());
+        });
+        
+        return { labels: labels.slice(-10), balances: balances.slice(-10) }; // Last 10 transactions
+    }
+
+    getWeeklyIncomeExpense() {
+        const weeklyData = {};
+        
+        this.transactions.forEach(transaction => {
+            const date = new Date(transaction.date);
+            const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
+            const weekKey = weekStart.toLocaleDateString();
+            
+            if (!weeklyData[weekKey]) {
+                weeklyData[weekKey] = { income: 0, expenses: 0 };
+            }
+            
+            if (transaction.type === 'income') {
+                weeklyData[weekKey].income += transaction.amount;
+            } else {
+                weeklyData[weekKey].expenses += Math.abs(transaction.amount);
+            }
+        });
+        
+        const labels = Object.keys(weeklyData).slice(-4); // Last 4 weeks
+        const income = labels.map(label => weeklyData[label]?.income || 0);
+        const expenses = labels.map(label => weeklyData[label]?.expenses || 0);
+        
+        return { labels, income, expenses };
+    }
+
+    getWeeklySpending() {
+        const weekDays = [0, 1, 2, 3, 4, 5, 6]; // Sunday = 0
+        const spending = weekDays.map(() => 0);
+        
+        this.transactions.forEach(transaction => {
+            if (transaction.type === 'expense') {
+                const dayOfWeek = new Date(transaction.date).getDay();
+                spending[dayOfWeek] += Math.abs(transaction.amount);
+            }
+        });
+        
+        // Rearrange to start with Monday
+        return [spending[1], spending[2], spending[3], spending[4], spending[5], spending[6], spending[0]];
     }
 }
 

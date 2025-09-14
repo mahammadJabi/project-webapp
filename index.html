@@ -16,10 +16,24 @@
             </div>
         </header>
 
+        <nav class="dashboard-nav">
+            <button class="nav-btn active" data-tab="transactions">
+                <i class="fas fa-list"></i> Transactions
+            </button>
+            <button class="nav-btn" data-tab="dashboard">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="nav-btn" data-tab="analytics">
+                <i class="fas fa-chart-line"></i> Analytics
+            </button>
+        </nav>
+
         <main>
-            <div class="form-section">
-                <h3>Add Transaction</h3>
-                <form id="transaction-form">
+            <!-- Transactions Tab -->
+            <div id="transactions-tab" class="tab-content active">
+                <div class="form-section">
+                    <h3>Add Transaction</h3>
+                    <form id="transaction-form">
                     <div class="form-group">
                         <label for="description">Description</label>
                         <input type="text" id="description" required placeholder="e.g., Grocery shopping">
@@ -97,6 +111,87 @@
                     <p class="no-transactions">No transactions yet. Add your first transaction above!</p>
                 </div>
             </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-chart-pie"></i> Expense Categories</h3>
+                        <canvas id="expenseChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-chart-bar"></i> Monthly Overview</h3>
+                        <canvas id="monthlyChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-chart-line"></i> Balance Trend</h3>
+                        <canvas id="balanceChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-info-circle"></i> Quick Stats</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-day"></i>
+                                <span>Today's Spending</span>
+                                <strong>$<span id="today-spending">0.00</span></strong>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-week"></i>
+                                <span>This Week</span>
+                                <strong>$<span id="week-spending">0.00</span></strong>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>This Month</span>
+                                <strong>$<span id="month-spending">0.00</span></strong>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>Biggest Expense</span>
+                                <strong>$<span id="biggest-expense">0.00</span></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-chart-area"></i> Income vs Expenses</h3>
+                        <canvas id="incomeExpenseChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-chart-line"></i> Weekly Spending Pattern</h3>
+                        <canvas id="weeklyChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-list-alt"></i> Category Breakdown</h3>
+                        <div id="category-breakdown" class="category-breakdown"></div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-download"></i> Export Data</h3>
+                        <div class="export-options">
+                            <button onclick="budgetTracker.exportData()" class="export-btn">
+                                <i class="fas fa-download"></i> Export JSON
+                            </button>
+                            <input type="file" id="import-file" accept=".json" style="display: none;" 
+                                   onchange="budgetTracker.importData(this.files[0])">
+                            <button onclick="document.getElementById('import-file').click()" class="export-btn">
+                                <i class="fas fa-upload"></i> Import JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -105,6 +200,7 @@
         <p>Syncing with cloud...</p>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
